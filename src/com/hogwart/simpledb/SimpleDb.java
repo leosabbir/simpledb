@@ -8,35 +8,75 @@ import java.util.Map;
  */
 public class SimpleDb {
 
-    private Map<String, Object> storage;
+    private Transaction rootTxn;
+    private Transaction currentTxn;
+    private Map<Object, Integer> counteMap;
 
-    public SimpleDb() {
-        this.storage = new HashMap<String, Object>();
+    private static SimpleDb INSTANCE;
+
+    private SimpleDb() {
+        this.rootTxn = new Transaction(null);
+        this.currentTxn = rootTxn;
+        counteMap = new HashMap<Object, Integer>();
+    }
+
+    public static SimpleDb  GET_INSTANCE() {
+        if (INSTANCE == null) {
+            INSTANCE = new SimpleDb();
+        }
+        return INSTANCE;
+    }
+
+    public Object get(String key) {
+        return this.currentTxn.get(key);
+    }
+
+    public void set(String key, Object value) {
+        if (this.currentTxn.set(key, value)) {
+            if (!this.counteMap.containsKey(value)) {
+                this.counteMap.put(value, 1);
+            } else {
+            this.counteMap.put(value, this.counteMap.get(value) + 1);
+            }
+        }
+    }
+
+    public void unset(String key) {
+        Object value = this.currentTxn.unset(key);
+        if ( value != null ) {
+            int currentCount = this.counteMap.get(value);
+            if (currentCount == 1) {
+                this.counteMap.remove(value);
+            } else {
+                this.counteMap.put(value, currentCount -  1);
+            }
+        }
+    }
+
+    public int getNumEqualTo(Object value) {
+        if (this.counteMap.containsKey(value)) {
+            return this.counteMap.get(value);
+        }
+        return 0;
     }
 
     public void execute (Commands command, String field, Object value) {
 
         switch (command) {
             case SET:
-                this.storage.put(field, value);
+                this.set(field, value);
                 break;
 
             case UNSET:
-                this.storage.remove(field);
+                this.unset(field);
                 break;
 
             case GET:
-                System.out.println(this.storage.get(field));
+                System.out.println(this.get(field));
                 break;
 
-            case NAMEQUALTO:
-                int counter = 0;
-                for(Object dbValue : this.storage.values()) {
-                    if (dbValue.equals(value)) {
-                        counter++;
-                    }
-                }
-                System.out.println(counter);
+            case NUMEQUALTO:
+                System.out.println(this.getNumEqualTo(field));
                 break;
         }
     }

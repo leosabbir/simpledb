@@ -7,7 +7,7 @@ public enum Commands {
     SET ("SET"),
     UNSET ("UNSET"),
     GET ("GET"),
-    NAMEQUALTO ("NAMEEQUAL"),
+    NUMEQUALTO ("NUMEQUALTO"),
     END ("END"),
     BEGIN ("BEGIN"),
     ROLLBACK ("ROLLBACK"),

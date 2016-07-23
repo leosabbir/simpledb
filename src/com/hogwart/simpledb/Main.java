@@ -7,7 +7,7 @@ public class Main {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
 
-        SimpleDb db = new SimpleDb();
+        SimpleDb db = SimpleDb.GET_INSTANCE();
 
         while(true) {
             String[] commands = sc.nextLine().split(" ");
