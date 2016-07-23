@@ -23,7 +23,13 @@ public class Storage extends HashMap<String, Object> {
         return true;
     }
 
-    public Object unset(String key) {
-        return this.remove(key);
+    public Object unset(String key, boolean saveNull) {
+        if(!saveNull) {
+            return this.remove(key);
+        } else {
+            Object value = this.get(key);
+            this.put(key, null);
+            return value;
+        }
     }
 }

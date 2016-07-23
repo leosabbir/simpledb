@@ -36,6 +36,18 @@ public class Transaction {
     }
 
     public Object unset(String key) {
-        return this.cache.unset(key);
+        return this.cache.unset(key, this.parent != null);
+    }
+
+    public Storage getCache() {
+        return this.cache;
+    }
+
+    public void unsetChild() {
+        this.child = null;
+    }
+
+    public boolean hasKey(String key) {
+        return this.cache.containsKey(key) && this.cache.get(key) != null;
     }
 }
