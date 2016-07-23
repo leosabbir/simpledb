@@ -1,11 +1,27 @@
 package com.hogwart.simpledb;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Scanner;
 
 public class Main {
 
     public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
+        Scanner sc = null;// = new Scanner(System.in);
+
+        if (args.length > 0) {
+            try {
+                sc = new Scanner(new FileInputStream(new File(args[0])));
+            } catch (FileNotFoundException e) {
+                System.err.println("Specified file was not found");
+                return;
+            }
+
+        } else {
+            sc = new Scanner(System.in);
+        }
 
         SimpleDb db = SimpleDb.GET_INSTANCE();
 
