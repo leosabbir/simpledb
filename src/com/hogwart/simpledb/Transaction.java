@@ -17,6 +17,9 @@ public class Transaction {
         //this.txdID = id;
         this.cache = new Storage();
         this.parent = parent;
+        if (parent != null) {
+            parent.child = this;
+        }
     }
 
     public Transaction getParent() {
@@ -48,6 +51,6 @@ public class Transaction {
     }
 
     public boolean hasKey(String key) {
-        return this.cache.containsKey(key) && this.cache.get(key) != null;
+        return this.cache.containsKey(key);// && this.cache.get(key) != null;
     }
 }

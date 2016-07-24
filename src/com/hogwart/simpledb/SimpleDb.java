@@ -124,8 +124,13 @@ public class SimpleDb {
     }
 
     private void commit() {
-        Transaction child = this.rootTxn.getChild();
+        if (this.currentTxn.getParent() == null) {
+            System.out.println("NO TRANSACTION");
+            return;
+        }
 
+        Transaction child = this.rootTxn.getChild();
+        this.currentTxn = this.rootTxn;
         while (child != null) {
             Storage txnCache = child.getCache();
 
@@ -138,10 +143,10 @@ public class SimpleDb {
                 } else {
                     this.rootTxn.set(key, value);
                 }
-
             }
+            child = child.getChild();
         }
-
+        this.currentTxn.unsetChild();
     }
 
     private Object find(String key, Transaction searchFrom) {
@@ -167,7 +172,7 @@ public class SimpleDb {
                 break;
 
             case GET:
-                System.out.println(this.get(field));
+                System.out.println(this.find(field, this.currentTxn));
                 break;
 
             case NUMEQUALTO:
@@ -183,10 +188,7 @@ public class SimpleDb {
                 break;
 
             case COMMIT:
-                if (this.currentTxn.getParent() == null) {
-                    System.out.println("NO TRANSACTION");
-                }
-
+                this.commit();
                 break;
 
             default:
