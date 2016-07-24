@@ -11,7 +11,7 @@ public class Main {
     public static void main(String[] args) {
         Scanner sc = null;// = new Scanner(System.in);
 
-        if (args.length > 0) {
+        if (args.length > 0) { // read commands from file
             try {
                 sc = new Scanner(new FileInputStream(new File(args[0])));
             } catch (FileNotFoundException e) {
@@ -19,7 +19,7 @@ public class Main {
                 return;
             }
 
-        } else {
+        } else { // read commands from console
             sc = new Scanner(System.in);
         }
 
@@ -28,15 +28,20 @@ public class Main {
         while(true) {
             String[] commands = sc.nextLine().split(" ");
 
-            Commands command = Commands.valueOf(commands[0]); //TODO invalid command
-            if (command == Commands.END) {
-                break;
+            try {
+                Commands command = Commands.valueOf(commands[0]); //TODO invalid command
+                if (command == Commands.END) {
+                    break;
+                }
+
+                String field = commands.length > 1 ? commands[1] : null;
+                Object value = commands.length > 2 ? commands[2] : null;
+
+                db.execute(command, field, value);
+            } catch (IllegalArgumentException e) {
+                System.err.println("Unsupported Command: " + commands[0]);
             }
 
-            String field = commands.length > 1 ? commands[1] : null;
-            Object value = commands.length > 2 ? commands[2] : null;
-
-            db.execute(command, field, value);
         }
     }
 }

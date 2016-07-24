@@ -190,10 +190,6 @@ public class SimpleDb {
             case COMMIT:
                 this.commit();
                 break;
-
-            default:
-                System.err.println("Unsupported command");
-
         }
     }
 }

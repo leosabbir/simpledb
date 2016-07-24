@@ -17,7 +17,7 @@ public class Storage extends HashMap<String, Object> {
 
     public boolean set(String key, Object value) {
         if (this.containsKey(key) && value.equals(this.getValue(key))) {
-                return false; // Nothing to be done, <key> already has same value
+            return false; // Nothing to be done, <key> already has same value
         }
         this.put(key, value);
         return true;
