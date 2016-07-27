@@ -5,19 +5,23 @@ import java.util.Map;
 
 /**
  * Created by sabbirmanandhar on 7/20/16.
+ *
+ * This is the Singleton class representing the main in memory database.
+ * It has a root transaction whose cache is the main memory of the database.
+ * Subsequent transactions are then represented doubly linked list.
  */
 public class SimpleDb {
 
-    private Transaction rootTxn;
-    private Transaction currentTxn;
-    private Map<Object, Integer> counteMap;
+    private Transaction rootTxn; // root transaction being the main memory holding all variables
+    private Transaction currentTxn; // holds pointer to most recent transaction, as nesting grows
+    private Map<Object, Integer> counterMap; // Keeps record of count of all variables with given value
 
     private static SimpleDb INSTANCE;
 
     private SimpleDb() {
         this.rootTxn = new Transaction(null);
         this.currentTxn = rootTxn;
-        counteMap = new HashMap<Object, Integer>();
+        counterMap = new HashMap<Object, Integer>();
     }
 
     public static SimpleDb  GET_INSTANCE() {
@@ -27,55 +31,78 @@ public class SimpleDb {
         return INSTANCE;
     }
 
-    public Object get(String key) {
-        return this.currentTxn.get(key);
-    }
-
+    /**
+     * Saves the variable in current transaction. Before saving the variable,
+     * it first checks if the variable already exists in the current or previous
+     * transaction. If already present then counterMap has to be updated accordingly.
+     *
+     * @param key variable to be saved
+     * @param value value of the variable
+     */
     public void set(String key, Object value) {
         Object currentValue = this.find(key, this.currentTxn);
 
         if (currentValue != null) {
             if (!currentValue.equals(value)) {
-                if (this.counteMap.get(currentValue) == 1) {
-                    this.counteMap.remove(currentValue);
+                // update counter Map with new value
+                if (this.counterMap.get(currentValue) == 1) {
+                    this.counterMap.remove(currentValue);
                 } else {
-                    this.counteMap.put(currentValue, this.counteMap.get(currentValue) - 1);
+                    this.counterMap.put(currentValue, this.counterMap.get(currentValue) - 1);
                 }
             } else {
-                return;
+                return; // nothing to be done if old value is same as new
             }
         }
 
         this.currentTxn.set(key, value);
 
-        if (!this.counteMap.containsKey(value)) {
-            this.counteMap.put(value, 1);
+        // Update counter Map for old value
+        if (!this.counterMap.containsKey(value)) {
+            this.counterMap.put(value, 1);
         } else {
-            this.counteMap.put(value, this.counteMap.get(value) + 1);
+            this.counterMap.put(value, this.counterMap.get(value) + 1);
         }
 
     }
 
+    /**
+     *  Removes the variable key from the system from current transaction scrope and update
+     *  counterMap accordingly.
+     *
+     * @param key the variable to be removed from the system
+     */
     public void unset(String key) {
         Object value = this.find(key, this.currentTxn);
         this.currentTxn.unset(key);
         if ( value != null ) {
-            int currentCount = this.counteMap.get(value);
+            int currentCount = this.counterMap.get(value);
             if (currentCount == 1) {
-                this.counteMap.remove(value);
+                this.counterMap.remove(value);
             } else {
-                this.counteMap.put(value, currentCount -  1);
+                this.counterMap.put(value, currentCount -  1);
             }
         }
     }
 
+    /**
+     * Returns the count of variables with value same as input parameter value
+     *
+     * @param value
+     * @return count of variables
+     */
     public int getNumEqualTo(Object value) {
-        if (this.counteMap.containsKey(value)) {
-            return this.counteMap.get(value);
+        if (this.counterMap.containsKey(value)) {
+            return this.counterMap.get(value);
         }
         return 0;
     }
 
+    /**
+     * Undo all the commands basically Set and Unset commands executed in
+     * current transaction scope.
+     *
+     */
     private void rollback() {
         if (this.currentTxn.getParent() == null) {
             System.out.println("NO TRANSACTION");
@@ -91,25 +118,25 @@ public class SimpleDb {
             if (value == null) { // unset command
                 Object prevValue = this.find(key, this.currentTxn.getParent());
 
-                if (!this.counteMap.containsKey(prevValue)) {
-                    this.counteMap.put(prevValue, 1);
+                if (!this.counterMap.containsKey(prevValue)) {
+                    this.counterMap.put(prevValue, 1);
                 } else {
-                    this.counteMap.put(prevValue, this.counteMap.get(prevValue) + 1);
+                    this.counterMap.put(prevValue, this.counterMap.get(prevValue) + 1);
                 }
 
             } else { //set command
-                if (this.counteMap.get(value) == 1) {
-                    this.counteMap.remove(value);
+                if (this.counterMap.get(value) == 1) {
+                    this.counterMap.remove(value);
                 } else {
-                    this.counteMap.put(value, this.counteMap.get(value) - 1);
+                    this.counterMap.put(value, this.counterMap.get(value) - 1);
                 }
 
                 Object prevValue = this.find(key, this.currentTxn.getParent());
 
-                if (!this.counteMap.containsKey(prevValue)) {
-                    this.counteMap.put(prevValue, 1);
+                if (!this.counterMap.containsKey(prevValue)) {
+                    this.counterMap.put(prevValue, 1);
                 } else {
-                    this.counteMap.put(prevValue, this.counteMap.get(prevValue) + 1);
+                    this.counterMap.put(prevValue, this.counterMap.get(prevValue) + 1);
                 }
             }
         }
@@ -123,6 +150,9 @@ public class SimpleDb {
 
     }
 
+    /**
+     * Applies all the commands of all transactions (Set and Unset) to the root transaction
+     */
     private void commit() {
         if (this.currentTxn.getParent() == null) {
             System.out.println("NO TRANSACTION");
@@ -149,6 +179,14 @@ public class SimpleDb {
         this.currentTxn.unsetChild();
     }
 
+    /**
+     * finds the value of the variable in the system. Search starts from the given
+     * transaction and propagates towards parent. Value is returned from the most recent one.
+     *
+     * @param key variable to find
+     * @param searchFrom transaction to start the search from
+     * @return value if found, null otherwise
+     */
     private Object find(String key, Transaction searchFrom) {
         Transaction txn = searchFrom;
         while (txn != null) {
@@ -160,6 +198,13 @@ public class SimpleDb {
         return null;
     }
 
+    /**
+     * executes the command
+     *
+     * @param command
+     * @param field
+     * @param value
+     */
     public void execute (Commands command, String field, Object value) {
 
         switch (command) {

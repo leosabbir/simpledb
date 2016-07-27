@@ -2,6 +2,15 @@ package com.hogwart.simpledb;
 
 /**
  * Created by sabbirmanandhar on 7/23/16.
+ *
+ * Whenever BEGIN command is encountered, a new transaction is represented by this class
+ *
+ * Transaction class has a cache which is an instance of Storage class. The cache holds holds
+ * variables belonging to the current transaction.
+ *
+ * Transaction also holds pointer to next Transaction or a child transaction which is nested transaction of
+ * current transaction.
+ * Besides the Transaction also holds point to parent transaction.
  */
 public class Transaction {
 
@@ -51,6 +60,6 @@ public class Transaction {
     }
 
     public boolean hasKey(String key) {
-        return this.cache.containsKey(key);// && this.cache.get(key) != null;
+        return this.cache.containsKey(key);
     }
 }

@@ -2,6 +2,11 @@ package com.hogwart.simpledb;
 
 /**
  * Created by sabbirmanandhar on 7/20/16.
+ *
+ *
+ * enum representation of String commands.
+ *
+ * All the commands are represented by an enum
  */
 public enum Commands {
     SET ("SET"),

@@ -4,6 +4,9 @@ import java.util.HashMap;
 
 /**
  * Created by sabbirmanandhar on 7/23/16.
+ *
+ * It extends HashMap
+ * It stores the variables of the current transaction
  */
 public class Storage extends HashMap<String, Object> {
 
